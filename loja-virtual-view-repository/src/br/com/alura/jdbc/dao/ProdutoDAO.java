@@ -11,6 +11,13 @@ import java.util.List;
 import br.com.alura.jdbc.modelo.Categoria;
 import br.com.alura.jdbc.modelo.Produto;
 
+/*ESTE MODELO DE CLASSE PODE SER USADO EM PROJETOS REAIS POIS USA UM PADRÃO ACEITO;*/
+
+/*Objeto de acesso a dados (acrônimo do inglês Data Access Object - DAO), 
+ * é um padrão para aplicações que utilizam persistência de dados, 
+ * onde tem a separação das regras de negócio das regras de acesso a banco de dados, 
+ * implementada com linguagens de programação orientadas a objetos (como por exemplo Java) e arquitetura*/
+
 public class ProdutoDAO {
 
 	private Connection connection;
@@ -19,82 +26,106 @@ public class ProdutoDAO {
 		this.connection = connection;
 	}
 
-	public void salvar(Produto produto) throws SQLException {
-		String sql = "INSERT INTO PRODUTO (NOME, DESCRICAO) VALUES (?, ?)";
+	public void salvar(Produto produto) {
+		try {
+			String sql = "INSERT INTO PRODUTO (NOME, DESCRICAO) VALUES (?, ?)";
 
-		try (PreparedStatement pstm = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+			try (PreparedStatement pstm = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-			pstm.setString(1, produto.getNome());
-			pstm.setString(2, produto.getDescricao());
+				pstm.setString(1, produto.getNome());
+				pstm.setString(2, produto.getDescricao());
 
-			pstm.execute();
-
-			try (ResultSet rst = pstm.getGeneratedKeys()) {
-				while (rst.next()) {
-					produto.setId(rst.getInt(1));
+				pstm.execute();
+				
+				// Recuperando o id do registro inserido
+				try (ResultSet rst = pstm.getGeneratedKeys()) {
+					while (rst.next()) {
+						produto.setId(rst.getInt(1));
+					}
 				}
 			}
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
 		}
+
 	}
 
-	public void salvarComCategoria(Produto produto) throws SQLException {
-		String sql = "INSERT INTO PRODUTO (NOME, DESCRICAO, CATEGORIA_ID) VALUES (?, ?, ?)";
+	public void salvarComCategoria(Produto produto) {
+		try {
+			String sql = "INSERT INTO PRODUTO (NOME, DESCRICAO, CATEGORIA_ID) VALUES (?, ?, ?)";
 
-		try (PreparedStatement pstm = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+			try (PreparedStatement pstm = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-			pstm.setString(1, produto.getNome());
-			pstm.setString(2, produto.getDescricao());
-			pstm.setInt(3, produto.getCategoriaId());
+				pstm.setString(1, produto.getNome());
+				pstm.setString(2, produto.getDescricao());
+				pstm.setInt(3, produto.getCategoriaId());
 
-			pstm.execute();
+				pstm.execute();
 
-			try (ResultSet rst = pstm.getGeneratedKeys()) {
-				while (rst.next()) {
-					produto.setId(rst.getInt(1));
+				try (ResultSet rst = pstm.getGeneratedKeys()) {
+					while (rst.next()) {
+						produto.setId(rst.getInt(1));
+					}
 				}
 			}
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
 		}
+
 	}
 
-	public List<Produto> listar() throws SQLException {
+	public List<Produto> listar() {
 		List<Produto> produtos = new ArrayList<Produto>();
-		String sql = "SELECT ID, NOME, DESCRICAO FROM PRODUTO";
+		try {
+			String sql = "SELECT ID, NOME, DESCRICAO FROM PRODUTO";
 
-		try (PreparedStatement pstm = connection.prepareStatement(sql)) {
-			pstm.execute();
+			try (PreparedStatement pstm = connection.prepareStatement(sql)) {
+				pstm.execute();
 
-			trasformarResultSetEmProduto(produtos, pstm);
+				trasformarResultSetEmProduto(produtos, pstm);
+			}
+			return produtos;
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
 		}
-		return produtos;
 	}
 
-	public List<Produto> buscar(Categoria ct) throws SQLException {
+	public List<Produto> buscar(Categoria ct) {
 		List<Produto> produtos = new ArrayList<Produto>();
-		String sql = "SELECT ID, NOME, DESCRICAO FROM PRODUTO WHERE CATEGORIA_ID = ?";
+		try {
 
-		try (PreparedStatement pstm = connection.prepareStatement(sql)) {
-			pstm.setInt(1, ct.getId());
-			pstm.execute();
+			String sql = "SELECT ID, NOME, DESCRICAO FROM PRODUTO WHERE CATEGORIA_ID = ?";
 
-			trasformarResultSetEmProduto(produtos, pstm);
+			try (PreparedStatement pstm = connection.prepareStatement(sql)) {
+				pstm.setInt(1, ct.getId());
+				pstm.execute();
+
+				trasformarResultSetEmProduto(produtos, pstm);
+			}
+			return produtos;
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
 		}
-		return produtos;
 	}
 
-	public void deletar(Integer id) throws SQLException {
+	public void deletar(Integer id) {
 		try (PreparedStatement stm = connection.prepareStatement("DELETE FROM PRODUTO WHERE ID = ?")) {
 			stm.setInt(1, id);
 			stm.execute();
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
-	public void alterar(String nome, String descricao, Integer id) throws SQLException {
+	public void alterar(String nome, String descricao, Integer id) {
 		try (PreparedStatement stm = connection
 				.prepareStatement("UPDATE PRODUTO P SET P.NOME = ?, P.DESCRICAO = ? WHERE ID = ?")) {
 			stm.setString(1, nome);
 			stm.setString(2, descricao);
 			stm.setInt(3, id);
 			stm.execute();
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
